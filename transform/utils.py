@@ -1,6 +1,8 @@
 from .config import target_columns_names
 from itertools import chain
 from re import split
+from opening_hours import OpeningHours
+from pyparsing.exceptions import ParseException
 
 week_days = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
 
@@ -31,9 +33,33 @@ def get_days(boundaries):
     return [week_days[boundaries[0]][0:2]]
 
 
+def get_days_boundaries(sub_section):
+    boundaries = []
+    for idx, day in enumerate(week_days):
+        if day[0:3] in sub_section:
+            boundaries.append(idx)
+
+    return boundaries
+
+
+def get_hours():
+    pass
+
+
+def get_opening_times(section):
+    for sub_section in section:
+        opening_time = []
+        for sub_sub_section in sub_section.split(","):
+            try:
+                opening_time.append(OpeningHours.parse(sub_sub_section).json())
+            except ParseException:
+                day_boundaries = get_days_boundaries(sub_section)
+                opening_time.append(get_days(day_boundaries))
+
+    return opening_time
+
 def get_openings_days(section):
     days = []
-    print(section)
     for sub_section in section:
         boundaries = []
         for idx, day in enumerate(week_days):
