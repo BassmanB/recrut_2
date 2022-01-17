@@ -11,6 +11,5 @@ class Src1:
         self.df.set_axis([target_columns_names], axis=1, inplace=True)
 
     def process(self):
-        self.df = generate_empty_columns(self.df)
         self.rename_columns()
         return self.df

@@ -1,5 +1,5 @@
-target_columns_names = ["name", "id", "cuisine", "open1", "close1", "days1", "price", "rating", "location",
-                        "description", "open2", "close2", "days2"]
+target_columns_names = ["name", "id", "cuisine", "open", "close", "days", "price", "rating", "location",
+                        "description"]
 
 config_sources = {
     "src1": {

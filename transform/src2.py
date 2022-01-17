@@ -1,8 +1,6 @@
-from .utils import split_column, get_openings_days, get_opening_times
-from pprint import pprint
-
-
+from .utils import split_column, get_opening_times, generate_empty_columns
 from .config import target_columns_names
+
 import pandas as pd
 
 
@@ -10,6 +8,7 @@ class Src2:
 
     def __init__(self, df):
         self.df = df
+        self.target_df = pd.DataFrame(columns=target_columns_names)
         self.id_list = []
         self.delimiter = ["/", ",", "-"]
         self.restaurant_parsed = []
@@ -24,9 +23,12 @@ class Src2:
 
     def gen_id_from_name(self):
         for row in self.df.iterrows():
-            print(row[1][0])
-            self.id_list.append(row[1][0].split()[0].lower() if len(row[1][0].split()) == 1 else
-                                row[1][0].split()[0].lower() + row[1][0].split()[1].lower())
+            if len(row[1][0].split()) == 1:
+                gen_id = row[1][0].split()[0].lower()
+            if len(row[1][0].split()) > 1:
+                gen_id = row[1][0].split()[0].lower() + row[1][0].split()[1].lower()
+
+            self.id_list.append(gen_id)
 
     def ids_to_df(self):
         self.df["id"] = self.id_list
@@ -39,7 +41,7 @@ class Src2:
             self.df["to_parse"][idx] = sections
             # self.df["to_parse"] = self.df["to_parse"].apply(lambda x: x.split(delimiter))
 
-    def split_into_rows(self):
+    def parse_days_hours(self):
         for idx, row in enumerate(self.df["to_parse"]):
             restaurant_name = self.df["id"][idx]
             openings = []
@@ -48,22 +50,29 @@ class Src2:
 
             self.restaurant_parsed.append({restaurant_name: openings})
 
-    def rename_columns(self):
-        pass
-        # print(split_column("Mon-Sun 11:30 am - 9 pm", self.delimiters))
+    def to_target_df(self, id, idx, days_hours):
+        self.target_df = self.target_df.append({"id":id,
+                               "name": self.df["name"][idx],
+                               "days": days_hours["days"],
+                               "open": days_hours["open"],
+                               "close": days_hours["close"]}, ignore_index=True)
+
+    def parsed_to_df(self):
+        for idx, restaurants in enumerate(self.restaurant_parsed):
+            for id in restaurants:
+                for days_hours in restaurants[id]:
+                    self.to_target_df(id, idx, days_hours[0])
 
     def process(self):
         self.move_header_row()
         self.add_header()
         self.gen_id_from_name()
         self.ids_to_df()
-        # self.split_to_parse("/")
-        # self.split_to_parse("")
         self.df["to_parse"] = split_column(self.df, "/")
         self.split_opening_sections()
-        self.split_into_rows()
-        # print(self.df["to_parse"])
-        pprint(self.restaurant_parsed)
-        # self.parsed_column = split_column(self.df, "/")
+        self.parse_days_hours()
+        self.df.drop('to_parse', inplace=True, axis=1)
+        self.parsed_to_df()
+        print(self.target_df)
         return self.df
         # print(self.df)

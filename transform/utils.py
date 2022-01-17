@@ -1,6 +1,5 @@
 from .config import target_columns_names
 from itertools import chain
-from re import split
 from opening_hours import OpeningHours
 from pyparsing.exceptions import ParseException
 
@@ -12,9 +11,9 @@ def flatten(array):
 
 
 def generate_empty_columns(df):
-    for num in range(len(target_columns_names) - df.shape[1]):
-        print("adding empty")
-        df[num] = ""
+    for column in target_columns_names:
+        print(column)
+        df[column] = ""
     return df
 
 
@@ -26,7 +25,6 @@ def split_column(df, delimiter):
 
 
 def get_days(boundaries):
-
     if len(boundaries) == 2:
         return list(map(lambda x: x[0:2], week_days[boundaries[0]:boundaries[1] + 1]))
 
@@ -42,21 +40,40 @@ def get_days_boundaries(sub_section):
     return boundaries
 
 
-def get_hours():
-    pass
+def group_subsections(openings):
+    for day in openings[0]:
+        openings[1]['days'].append(day)
+
+    del openings[0]
+    return openings
+
+
+def group_opening_days(parsed_days_hours):
+    days = []
+    for row in parsed_days_hours:
+        days.append(row['day'][0:2].capitalize())
+
+    return {"days": days, "open": parsed_days_hours[0]["opens"], "close": parsed_days_hours[0]["closes"]}
 
 
 def get_opening_times(section):
+    opening_time = []
     for sub_section in section:
-        opening_time = []
-        for sub_sub_section in sub_section.split(","):
-            try:
-                opening_time.append(OpeningHours.parse(sub_sub_section).json())
-            except ParseException:
-                day_boundaries = get_days_boundaries(sub_section)
-                opening_time.append(get_days(day_boundaries))
+        try:
+            # Library opening_hours, doesn't recognize "Thu", instead needs to be "Thurs" or "Th"
+            sub_section = sub_section.replace("Thu", "Thurs")
+            parsed_days_hours = OpeningHours.parse(sub_section).json()
+            grouped_parsed_hours = group_opening_days(parsed_days_hours)
+            opening_time.append(grouped_parsed_hours)
+        except ParseException:
+            day_boundaries = get_days_boundaries(sub_section)
+            opening_time.append(get_days(day_boundaries))
+
+    if len(opening_time) > 1:
+        return group_subsections(opening_time)
 
     return opening_time
+
 
 def get_openings_days(section):
     days = []
