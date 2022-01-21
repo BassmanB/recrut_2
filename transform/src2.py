@@ -1,4 +1,4 @@
-from .utils import split_column, get_opening_times, generate_empty_columns
+from .utils import split_column, get_opening_times, to_datetime
 from .config import target_columns_names
 
 import pandas as pd
@@ -10,7 +10,6 @@ class Src2:
         self.df = df
         self.target_df = pd.DataFrame(columns=target_columns_names)
         self.id_list = []
-        self.delimiter = ["/", ",", "-"]
         self.restaurant_parsed = []
 
     def move_header_row(self):
@@ -39,7 +38,6 @@ class Src2:
             for section in row:
                 sections.append(section.split(","))
             self.df["to_parse"][idx] = sections
-            # self.df["to_parse"] = self.df["to_parse"].apply(lambda x: x.split(delimiter))
 
     def parse_days_hours(self):
         for idx, row in enumerate(self.df["to_parse"]):
@@ -51,11 +49,11 @@ class Src2:
             self.restaurant_parsed.append({restaurant_name: openings})
 
     def to_target_df(self, id, idx, days_hours):
-        self.target_df = self.target_df.append({"id":id,
-                               "name": self.df["name"][idx],
-                               "days": days_hours["days"],
-                               "open": days_hours["open"],
-                               "close": days_hours["close"]}, ignore_index=True)
+        self.target_df = self.target_df.append({"id": id,
+                                                "name": self.df["name"][idx],
+                                                "days": days_hours["days"],
+                                                "open": days_hours["open"],
+                                                "close": days_hours["close"]}, ignore_index=True)
 
     def parsed_to_df(self):
         for idx, restaurants in enumerate(self.restaurant_parsed):
@@ -72,7 +70,11 @@ class Src2:
         self.split_opening_sections()
         self.parse_days_hours()
         self.df.drop('to_parse', inplace=True, axis=1)
+        self.df["name"] = self.df["name"].str.strip()
         self.parsed_to_df()
-        print(self.target_df)
-        return self.df
-        # print(self.df)
+        self.target_df = to_datetime(self.target_df)
+
+        print(self.target_df.columns.values)
+
+        
+        return self.target_df

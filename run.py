@@ -20,8 +20,7 @@ def main():
             src2 = Src2(restaurant_data)
             restaurant = Restaurant(src2.process())
 
-        if restaurant:
-            pass
+        restaurant.get_open_restaurants()
 
 
 if __name__ == '__main__':

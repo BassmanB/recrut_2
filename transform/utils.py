@@ -1,20 +1,13 @@
-from .config import target_columns_names
 from itertools import chain
 from opening_hours import OpeningHours
 from pyparsing.exceptions import ParseException
+import pandas as pd
 
 week_days = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
 
 
 def flatten(array):
     return [item for sublist in array for item in sublist]
-
-
-def generate_empty_columns(df):
-    for column in target_columns_names:
-        print(column)
-        df[column] = ""
-    return df
 
 
 def split_column(df, delimiter):
@@ -86,3 +79,10 @@ def get_openings_days(section):
         days.append(get_days(boundaries))
 
     return list(chain.from_iterable(days))
+
+
+def to_datetime(df):
+    df["open"] = df["open"] = pd.to_datetime(df['open'])
+    df["close"] = df["close"] = pd.to_datetime(df['close'])
+
+    return df

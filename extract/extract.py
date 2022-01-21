@@ -17,9 +17,9 @@ class FileParser:
     @staticmethod
     def read_data(file):
         try:
-            print(f"Read the {file} source")
+            print(f"Reading the {file} source")
             df = pd.read_csv(file)
-            print(f"{file} successfully processed")
+            print(f"Successfully read {file} ")
             return df
         except Exception as e:
             print(f"Failed to read {file}: Code error: {e}")
